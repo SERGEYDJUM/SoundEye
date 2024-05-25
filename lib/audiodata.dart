@@ -2,13 +2,17 @@ import 'dart:core';
 import 'dart:math';
 import 'package:circular_buffer/circular_buffer.dart';
 import 'package:fftea/fftea.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:logging/logging.dart';
 import 'package:soundeye/audiosource.dart';
+
+final logger = Logger('SoundEyeLogger');
 
 final _fft = FFT(bufferSize);
 
 class AudioData {
   late DateTime timestamp;
-  late double loudness;
+  late double power;
   late List<double> magnitudes;
   bool empty = false;
 
@@ -16,21 +20,21 @@ class AudioData {
     timestamp = block.timestamp;
     magnitudes = _fft.realFft(block.samples).magnitudes();
 
-    double rms = sqrt(block.samples.reduce((v, el) => v + el*el) / block.samples.length);
-    loudness = log(rms) / ln10 * 20.0;
+    double energy = block.samples.reduce((val, el) => val + el*el);
+    power = energy / block.samples.length;
   }
 
   AudioData.zero() {
     timestamp = DateTime.now();
     empty = true;
-    loudness = 0.0;
+    power = 0.0;
     magnitudes = List.empty();
   }
 }
 
 class AudioDataTrack {
   static const double blockDuration = 1024 / 48000;
-  static const int trackLength = 2048;
+  static const int trackLength = 1024;
 
   CircularBuffer<AudioData> blocks = CircularBuffer(trackLength);
   
@@ -44,7 +48,11 @@ class AudioDataTrack {
     blocks.add(AudioData(block));
   }
 
-  List<double> getLoudnessPoints() {
-    return List.from(blocks.map((el) => el.loudness));
+  Iterable<double> getLoudnessPoints() {
+    return blocks.map((el) => el.power);
+  }
+
+  Iterable<FlSpot> lodnessPoints() {
+    return getLoudnessPoints().indexed.map((el) => FlSpot(el.$1.toDouble(), el.$2));
   }
 }

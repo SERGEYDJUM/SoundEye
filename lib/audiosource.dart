@@ -77,12 +77,12 @@ class MicAudioSource with ChangeNotifier {
     double sample = 0;
 
     if (pcmSample is (int, int) || pcmSample is (double, double)) {
-      sample = 0.5 * (pcmSample.$1 + pcmSample.$2);
+      sample = pcmSample.$1.toDouble();
     } else {
       sample = pcmSample.toDouble();
     }
 
-    sample /= 32768;
+    sample /= 32767;
     samples.add(sample);
     bufferHead += 1;
 

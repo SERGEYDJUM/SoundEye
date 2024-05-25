@@ -50,26 +50,69 @@ class _SoundEyeState extends State<SoundEye> {
     return Scaffold(
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
-            // LineChart(
-            //   LineChartData()
-            // ),
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              audioTrack.blocks.last.loudness.toString(),
-              style: Theme.of(context).textTheme.headlineMedium,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: 2,
+              child: LineChart(
+                LineChartData(
+                  maxX: AudioDataTrack.trackLength.toDouble(),
+                  minX: 0,
+                  minY: -1,
+                  maxY: 1,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: audioTrack.lodnessPoints().toList(),
+                      isCurved: false,
+                      dotData: const FlDotData(
+                        show: false,
+                      ),
+                    ),
+                  ],
+                ),
+                duration: Duration.zero,
+              ),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _onPause,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        tooltip: 'Pause',
+        child: (audioSource.active) ? const Icon(Icons.pause) : const Icon(Icons.play_arrow),
+      ),
     );
   }
+  //   return Scaffold(
+  //     body: Center(
+  //       child: Column(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: <Widget>[
+  //           LineChart(
+  //             LineChartData(
+  //               minX: 0,
+  //               maxX: AudioDataTrack.trackLength.toDouble(),
+  //               minY: -50,
+  //               maxY: 150,
+  //               lineBarsData: [LineChartBarData(
+  //                 spots: List.from(audioTrack.lodnessPoints()),
+  //                 isCurved: true,
+  //                 color: Colors.black
+  //               )],
+  //             )
+  //           ),
+  //           Text(
+  //             audioTrack.blocks.last.loudness.toString(),
+  //             style: Theme.of(context).textTheme.headlineMedium,
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //     floatingActionButton: FloatingActionButton(
+  //       onPressed: _onPause,
+  //       tooltip: 'Increment',
+  //       child: const Icon(Icons.add),
+  //     ), // This trailing comma makes auto-formatting nicer for build methods.
+  //   );
+  // }
 }
