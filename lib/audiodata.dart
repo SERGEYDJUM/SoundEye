@@ -1,12 +1,10 @@
 import 'dart:core';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui';
 import 'package:circular_buffer/circular_buffer.dart';
 import 'package:color_map/color_map.dart';
 import 'package:fftea/fftea.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:soundeye/audiosource.dart';
 import 'package:soundeye/constants.dart' as constants;
@@ -28,7 +26,7 @@ class AudioData {
     List<double> fftRes = _fft.realFft(block.samples).discardConjugates().magnitudes();
     
     magnitudes = List.filled(constants.ISO_BINS.length, 0);
-    
+
     int currentBin = 0;
     for (int i = 1; i < constants.BLOCK_SIZE ~/ 2; i++) {
       int freq = i * constants.SAMPLE_RATE ~/ constants.BLOCK_SIZE;
@@ -59,6 +57,12 @@ class AudioData {
 
     double energy = block.samples.reduce((val, el) => val + el * el);
     power = energy / block.samples.length;
+    
+    if (power < 0.05) {
+        power = 0;
+    } else {
+      power = 20 * log(power) / ln10 + 27;
+    }
 
     // power = fftRes[0] / constants.BLOCK_SIZE;
   }
@@ -72,9 +76,7 @@ class AudioData {
 }
 
 class AudioDataTrack {
-  static const int trackLength = 1024;
-
-  CircularBuffer<AudioData> blocks = CircularBuffer(trackLength);
+  CircularBuffer<AudioData> blocks = CircularBuffer(constants.TRACK_LENGTH);
 
   AudioDataTrack() {
     for (int i = 0; i < blocks.capacity; i++) {
@@ -83,12 +85,19 @@ class AudioDataTrack {
   }
 
   void push(SampleBlock block) {
+    assert(block.timestamp.isAfter(blocks.last.timestamp));
     blocks.add(AudioData(block));
   }
 
   Iterable<FlSpot> loudnessPoints() {
+    double avg = 0;
+    int w = 4;
+
     return blocks
-        .map((el) => el.power)
+        .map((el) {
+          avg = (avg * (w-1) + el.power) / w;
+          return avg;
+        })
         .indexed
         .map((el) => FlSpot(el.$1.toDouble(), el.$2));
   }
@@ -96,7 +105,7 @@ class AudioDataTrack {
   List<ScatterSpot> spectrogramPoints() {
     List<ScatterSpot> points = [];
     Colormap cmap = Colormaps.Spectral;
-    for (int i = 0; i < trackLength; i++) {
+    for (int i = 0; i < constants.TRACK_LENGTH; i++) {
       for (int j = 0; j < blocks[i].magnitudes.length; j++) {
         double datapoint = clampDouble(1 - blocks[i].magnitudes[j], 0, 1);
 

@@ -28,8 +28,7 @@ class MicAudioSource with ChangeNotifier {
   late int sSampleRate;
   late int sBufferSize;
 
-  CircularBuffer<SampleBlock> finishedBlocks = CircularBuffer(constants.INTERNAL_BUFFER_SIZE);
-  int finishedBlocksCount = 0;
+  late SampleBlock finishedBlock;
   CircularBuffer<double> samples = CircularBuffer(constants.BLOCK_SIZE);
   int bufferHead = 0;
 
@@ -87,13 +86,9 @@ class MicAudioSource with ChangeNotifier {
     bufferHead += 1;
 
     if (bufferHead == constants.BLOCK_SIZE) {
-      finishedBlocks.add(_getSamples());
-      finishedBlocksCount += 1;
+      finishedBlock = _getSamples();
       bufferHead = 0;
-      if (finishedBlocksCount == constants.INTERNAL_BUFFER_SIZE) {
-        notifyListeners();
-        finishedBlocksCount = 0;
-      }
+      notifyListeners();
     }
   }
 }

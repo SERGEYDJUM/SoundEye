@@ -28,9 +28,7 @@ class _SoundEyeState extends State<SoundEye> {
 
   void _onNewBlock() {
     setState(() {
-      for (SampleBlock block in audioSource.finishedBlocks) {
-        audioTrack.push(block);
-      }
+      audioTrack.push(audioSource.finishedBlock);
     });
   }
 

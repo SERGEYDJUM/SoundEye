@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:soundeye/audiodata.dart';
+import 'package:soundeye/constants.dart' as constants;
 
 class Spectrogram extends StatelessWidget {
   const Spectrogram({super.key, required this.samples});
@@ -14,7 +14,7 @@ class Spectrogram extends StatelessWidget {
       child: ScatterChart(
         ScatterChartData(
           minX: 0,
-          maxX: AudioDataTrack.trackLength.toDouble(),
+          maxX: constants.TRACK_LENGTH.toDouble(),
           maxY: 10,
           minY: 0,
           scatterSpots: samples,

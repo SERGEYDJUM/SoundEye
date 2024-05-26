@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:soundeye/audiodata.dart';
+import 'package:soundeye/constants.dart' as constants;
 
 class PowerChart extends StatelessWidget {
   const PowerChart({super.key, required this.samples});
@@ -13,10 +13,10 @@ class PowerChart extends StatelessWidget {
       aspectRatio: 2,
       child: LineChart(
         LineChartData(
-          maxX: AudioDataTrack.trackLength.toDouble(),
+          maxX: constants.TRACK_LENGTH.toDouble(),
           minX: 0,
           minY: 0,
-          maxY: 1,
+          maxY: 20,
           lineBarsData: [
             LineChartBarData(
               spots: samples,
