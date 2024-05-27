@@ -28,6 +28,12 @@ class _SoundEyeState extends State<SoundEye> {
     });
   }
 
+  void _onDoubleTap() {
+    setState(() {
+      showLabels = !showLabels;
+    });
+  }
+
   void _onNewBlock() {
     setState(() {
       audioTrack.push(audioSource.finishedBlock);
@@ -52,7 +58,7 @@ class _SoundEyeState extends State<SoundEye> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: () => {showLabels = !showLabels},
+        onDoubleTap: _onDoubleTap,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

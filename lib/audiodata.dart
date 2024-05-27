@@ -132,7 +132,7 @@ class AudioDataTrack {
           j.toDouble(),
           dotPainter: FlDotCirclePainter(
               color: Color.fromARGB(255, r.toInt(), g.toInt(), b.toInt()),
-              radius: 1),
+              radius: 2),
         ));
       }
     }
