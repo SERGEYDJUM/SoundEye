@@ -20,6 +20,8 @@ class _SoundEyeState extends State<SoundEye> {
   late AudioDataTrack audioTrack = AudioDataTrack();
   late MicAudioSource audioSource;
 
+  bool showLabels = false;
+
   void _onPause() {
     setState(() {
       audioSource.toggle();
@@ -49,23 +51,26 @@ class _SoundEyeState extends State<SoundEye> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 50),
-                child: PowerChart(samples: audioTrack.loudnessPoints().toList()),
+      body: GestureDetector(
+        onDoubleTap: () => {showLabels = !showLabels},
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: PowerChart(samples: audioTrack.loudnessPoints().toList(), showTitles: showLabels,),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(),
-                child: Spectrogram(samples: audioTrack.spectrogramPoints()),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(),
+                  child: Spectrogram(
+                    samples: audioTrack.spectrogramPoints(),
+                    showLabels: showLabels,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -78,36 +83,4 @@ class _SoundEyeState extends State<SoundEye> {
       ),
     );
   }
-  //   return Scaffold(
-  //     body: Center(
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: <Widget>[
-  //           LineChart(
-  //             LineChartData(
-  //               minX: 0,
-  //               maxX: AudioDataTrack.trackLength.toDouble(),
-  //               minY: -50,
-  //               maxY: 150,
-  //               lineBarsData: [LineChartBarData(
-  //                 spots: List.from(audioTrack.lodnessPoints()),
-  //                 isCurved: true,
-  //                 color: Colors.black
-  //               )],
-  //             )
-  //           ),
-  //           Text(
-  //             audioTrack.blocks.last.loudness.toString(),
-  //             style: Theme.of(context).textTheme.headlineMedium,
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //     floatingActionButton: FloatingActionButton(
-  //       onPressed: _onPause,
-  //       tooltip: 'Increment',
-  //       child: const Icon(Icons.add),
-  //     ), // This trailing comma makes auto-formatting nicer for build methods.
-  //   );
-  // }
 }

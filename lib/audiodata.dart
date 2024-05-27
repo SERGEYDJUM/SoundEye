@@ -13,6 +13,12 @@ final logger = Logger('SoundEyeLogger');
 
 final _fft = FFT(constants.BLOCK_SIZE);
 
+// for (int i = pos; i < pos + size; i++)
+// {
+//         int j = i - pos; // j = index into Hann window function
+//         signal_in[i] = (double)(signal_in[i] * 0.5 * (1.0 - Math.cos(2.0 * Math.PI * j / size)));
+// }
+
 class AudioData {
   late DateTime timestamp;
   late double power;
@@ -23,9 +29,25 @@ class AudioData {
   AudioData(SampleBlock block) {
     timestamp = block.timestamp;
 
+    double energy = block.samples.reduce((val, el) => val + el * el);
+    power = energy / block.samples.length;
+    
+    if (power < 0.01) {
+        power = 0;
+    } else {
+      power = 10 * log(power) / ln10 + 21;
+    }
+
+    // Windowing before FFT
+    for (var i = 0; i < block.samples.length; i++) {
+      double hamming = 0.54 - 0.46 * cos(2.0 * pi * i / block.samples.length);
+      block.samples[i] *= hamming;
+    }
+
     List<double> fftRes = _fft.realFft(block.samples).discardConjugates().magnitudes();
     
     magnitudes = List.filled(constants.ISO_BINS.length, 0);
+    List<int> bandSizes = List.filled(constants.ISO_BINS.length,0);
 
     int currentBin = 0;
     for (int i = 1; i < constants.BLOCK_SIZE ~/ 2; i++) {
@@ -38,33 +60,25 @@ class AudioData {
       }
 
       magnitudes[currentBin] += fftRes[i] / constants.BLOCK_SIZE;
+      bandSizes[currentBin] += 1;
     }
 
     // print(magnitudes);
 
     for (int i = 0; i < magnitudes.length; i++) {
-      if (magnitudes[i] < 0.1) {
-        magnitudes[i] = 0;
-      }
+      magnitudes[i] /= bandSizes[i].clamp(1, 1000);
 
-      magnitudes[i] = 20 * log(magnitudes[i]) / ln10 + 21;
+      // if (magnitudes[i] < 0.1) {
+      //   magnitudes[i] = 0;
+      // }
+
+      // magnitudes[i] = 20 * log(magnitudes[i]) / ln10 + 21;
     }
 
     double magPeak = magnitudes.reduce(max);
     for (int i = 0; i < magnitudes.length; i++) {
       magnitudes[i] /= magPeak;
     }
-
-    double energy = block.samples.reduce((val, el) => val + el * el);
-    power = energy / block.samples.length;
-    
-    if (power < 0.05) {
-        power = 0;
-    } else {
-      power = 20 * log(power) / ln10 + 27;
-    }
-
-    // power = fftRes[0] / constants.BLOCK_SIZE;
   }
 
   AudioData.zero() {
@@ -90,8 +104,8 @@ class AudioDataTrack {
   }
 
   Iterable<FlSpot> loudnessPoints() {
-    double avg = 0;
-    int w = 4;
+    double avg = blocks.first.power;
+    int w = 3;
 
     return blocks
         .map((el) {
@@ -114,7 +128,7 @@ class AudioDataTrack {
         double b = cmap(datapoint).z * 255;
         
         points.add(ScatterSpot(
-          i.toDouble(),
+          i.toDouble() * 2,
           j.toDouble(),
           dotPainter: FlDotCirclePainter(
               color: Color.fromARGB(255, r.toInt(), g.toInt(), b.toInt()),
